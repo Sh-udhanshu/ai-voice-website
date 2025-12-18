@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Voice Assistant</title>
+
+<style>
+    body {
+        background: linear-gradient(135deg,#020617,#020617,#020617);
+        font-family: Arial, sans-serif;
+        color: white;
+        text-align: center;
+        padding-top: 60px;
+    }
+
+    h1 {
+        font-size: 32px;
+        margin-bottom: 10px;
+    }
+
+    .box {
+        width: 90%;
+        max-width: 420px;
+        margin: auto;
+        background: #020617;
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px #38bdf8;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 8px;
+        border: none;
+        margin-bottom: 10px;
+    }
+
+    button {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        margin-top: 10px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        background: #38bdf8;
+    }
+
+    button:hover {
+        background: #0ea5e9;
+    }
+
+    #output {
+        margin-top: 15px;
+        font-size: 17px;
+        min-height: 50px;
+    }
+</style>
+</head>
+
+<body>
+
+<h1>🤖 AI Voice Assistant</h1>
+
+<div class="box">
+    <input type="text" id="textInput" placeholder="Type or speak your question">
+    <button onclick="textQuestion()">Ask (Text)</button>
+    <button onclick="voiceQuestion()">🎤 Speak</button>
+    <div id="output"></div>
+</div>
+
+<script>
+    const repliesEN = {
+        creator: [
+            "This website is created by six members: Aditya, Sudhanshu, Naman, Kartavya, Viraj and Vedansh.",
+            "It was developed by a team of six students: Aditya, Sudhanshu, Naman, Kartavya, Viraj and Vedansh."
+        ],
+        count: "This website is created by six members.",
+        greet: ["Hello! How can I help you?", "Hi! Ask me about this website."],
+        unknown: ["Sorry, I can only answer about this website."]
+    };
+
+    const repliesHI = {
+        creator: [
+            "Is website ko 6 members ne banaya hai: Aditya, Sudhanshu, Naman, Kartavya, Viraj aur Vedansh.",
+            "Yeh website 6 students ne milkar banayi hai: Aditya, Sudhanshu, Naman, Kartavya, Viraj aur Vedansh."
+        ],
+        count: "Is website ko 6 members ne banaya hai.",
+        greet: ["Namaste! Aap kya poochna chahte ho?"],
+        unknown: ["Maaf kijiye, main sirf is website se related sawalon ka jawab de sakta hoon."]
+    };
+
+    function random(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+    function detectLang(q){
+        return /[अ-ह]/.test(q) || q.includes("kisne") || q.includes("banaya") ? "hi" : "en";
+    }
+
+    function getAnswer(q){
+        q = q.toLowerCase();
+        const lang = detectLang(q);
+        const r = lang === "hi" ? repliesHI : repliesEN;
+
+        if(q.includes("who") || q.includes("creator") || q.includes("kisne"))
+            return random(r.creator);
+
+        if(q.includes("how many") || q.includes("kitne"))
+            return r.count;
+
+        if(q.includes("hello") || q.includes("hi") || q.includes("namaste"))
+            return random(r.greet);
+
+        return random(r.unknown);
+    }
+
+    function typeEffect(text){
+        const out = document.getElementById("output");
+        out.innerHTML = "";
+        let i = 0;
+        const interval = setInterval(()=>{
+            out.innerHTML += text.charAt(i);
+            i++;
+            if(i >= text.length) clearInterval(interval);
+        },30);
+    }
+
+    function speak(text, lang){
+        speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = lang === "hi" ? "hi-IN" : "en-IN";
+        speechSynthesis.speak(msg);
+    }
+
+    function textQuestion(){
+        const q = textInput.value;
+        const lang = detectLang(q);
+        const ans = getAnswer(q);
+        typeEffect(ans);
+        speak(ans,lang);
+    }
+
+    function voiceQuestion(){
+        const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        rec.lang = "en-IN";
+        rec.start();
+        rec.onresult = e=>{
+            const q = e.results[0][0].transcript;
+            const lang = detectLang(q);
+            const ans = getAnswer(q);
+            typeEffect(ans);
+            speak(ans,lang);
+        };
+    }
+</script>
+
+</body>
+</html>
